@@ -2,24 +2,33 @@
  * EmailQueue Unit Tests
  */
 
-import EmailQueue from '../src/utils/Emailqueue.js';
+import { jest } from "@jest/globals";
+import EmailQueue from "../src/utils/Emailqueue.js";
 
-describe('EmailQueue', () => {
+describe("EmailQueue", () => {
   let queue;
 
   beforeEach(() => {
     queue = new EmailQueue();
   });
 
-  describe('Basic operations', () => {
-    test('should start empty', () => {
+  describe("Basic operations", () => {
+    test("should start empty", () => {
       expect(queue.isEmpty()).toBe(true);
       expect(queue.size()).toBe(0);
     });
 
-    test('should add and retrieve emails in FIFO order', async () => {
-      const email1 = { to: 'test1@example.com', subject: 'Test 1', body: 'Body 1' };
-      const email2 = { to: 'test2@example.com', subject: 'Test 2', body: 'Body 2' };
+    test("should add and retrieve emails in FIFO order", async () => {
+      const email1 = {
+        to: "test1@example.com",
+        subject: "Test 1",
+        body: "Body 1",
+      };
+      const email2 = {
+        to: "test2@example.com",
+        subject: "Test 2",
+        body: "Body 2",
+      };
 
       await queue.add(email1);
       await queue.add(email2);
@@ -35,37 +44,49 @@ describe('EmailQueue', () => {
       expect(queue.isEmpty()).toBe(true);
     });
 
-    test('should return null when getting from empty queue', async () => {
+    test("should return null when getting from empty queue", async () => {
       const result = await queue.next();
       expect(result).toBeNull();
     });
 
-    test('should peek without removing', () => {
-      const email = { to: 'test@example.com', subject: 'Test', body: 'Body' };
-      queue.add(email);
+    test("should peek without removing", async () => {
+      const email = { to: "test@example.com", subject: "Test", body: "Body" };
+      await queue.add(email);
 
       const peeked = queue.peek();
       expect(peeked).toEqual(email);
       expect(queue.size()).toBe(1); // Should not remove
 
-      const retrieved = queue.next();
+      const retrieved = await queue.next();
       expect(retrieved).toEqual(email);
       expect(queue.isEmpty()).toBe(true);
     });
 
-    test('should return null when peeking empty queue', () => {
+    test("should return null when peeking empty queue", () => {
       const result = queue.peek();
       expect(result).toBeNull();
     });
   });
 
-  describe('Priority handling', () => {
-    test('should handle priority ordering', async () => {
-      const lowPriority = { to: 'low@example.com', subject: 'Low Priority', body: 'Body' };
-      const highPriority = { to: 'high@example.com', subject: 'High Priority', body: 'Body' };
-      const mediumPriority = { to: 'medium@example.com', subject: 'Medium Priority', body: 'Body' };
+  describe("Priority handling", () => {
+    test("should handle priority ordering", async () => {
+      const lowPriority = {
+        to: "low@example.com",
+        subject: "Low Priority",
+        body: "Body",
+      };
+      const highPriority = {
+        to: "high@example.com",
+        subject: "High Priority",
+        body: "Body",
+      };
+      const mediumPriority = {
+        to: "medium@example.com",
+        subject: "Medium Priority",
+        body: "Body",
+      };
 
-      await queue.add(lowPriority, 10);    // Lower number = higher priority
+      await queue.add(lowPriority, 10); // Lower number = higher priority
       await queue.add(highPriority, 1);
       await queue.add(mediumPriority, 5);
 
@@ -78,9 +99,17 @@ describe('EmailQueue', () => {
       expect(third).toEqual(lowPriority);
     });
 
-    test('should maintain FIFO for same priority items', async () => {
-      const email1 = { to: 'test1@example.com', subject: 'First', body: 'Body' };
-      const email2 = { to: 'test2@example.com', subject: 'Second', body: 'Body' };
+    test("should maintain FIFO for same priority items", async () => {
+      const email1 = {
+        to: "test1@example.com",
+        subject: "First",
+        body: "Body",
+      };
+      const email2 = {
+        to: "test2@example.com",
+        subject: "Second",
+        body: "Body",
+      };
 
       await queue.add(email1, 5);
       await queue.add(email2, 5);
@@ -92,10 +121,19 @@ describe('EmailQueue', () => {
       expect(second).toEqual(email2);
     });
 
-    test('should get items by priority', async () => {
-      await queue.add({ to: 'test1@example.com', subject: 'Test', body: 'Body' }, 1);
-      await queue.add({ to: 'test2@example.com', subject: 'Test', body: 'Body' }, 2);
-      await queue.add({ to: 'test3@example.com', subject: 'Test', body: 'Body' }, 1);
+    test("should get items by priority", async () => {
+      await queue.add(
+        { to: "test1@example.com", subject: "Test", body: "Body" },
+        1
+      );
+      await queue.add(
+        { to: "test2@example.com", subject: "Test", body: "Body" },
+        2
+      );
+      await queue.add(
+        { to: "test3@example.com", subject: "Test", body: "Body" },
+        1
+      );
 
       const priority1Items = queue.getByPriority(1);
       const priority2Items = queue.getByPriority(2);
@@ -104,11 +142,20 @@ describe('EmailQueue', () => {
       expect(priority2Items).toHaveLength(1);
     });
 
-    test('should reorder by priority', async () => {
+    test("should reorder by priority", async () => {
       // Add items in random order
-      await queue.add({ to: 'test3@example.com', subject: 'Test', body: 'Body' }, 3);
-      await queue.add({ to: 'test1@example.com', subject: 'Test', body: 'Body' }, 1);
-      await queue.add({ to: 'test2@example.com', subject: 'Test', body: 'Body' }, 2);
+      await queue.add(
+        { to: "test3@example.com", subject: "Test", body: "Body" },
+        3
+      );
+      await queue.add(
+        { to: "test1@example.com", subject: "Test", body: "Body" },
+        1
+      );
+      await queue.add(
+        { to: "test2@example.com", subject: "Test", body: "Body" },
+        2
+      );
 
       queue.reorderByPriority();
 
@@ -116,16 +163,24 @@ describe('EmailQueue', () => {
       const second = await queue.next();
       const third = await queue.next();
 
-      expect(first.to).toBe('test1@example.com');
-      expect(second.to).toBe('test2@example.com');
-      expect(third.to).toBe('test3@example.com');
+      expect(first.to).toBe("test1@example.com");
+      expect(second.to).toBe("test2@example.com");
+      expect(third.to).toBe("test3@example.com");
     });
   });
 
-  describe('Queue management', () => {
-    test('should clear all items', async () => {
-      await queue.add({ to: 'test1@example.com', subject: 'Test', body: 'Body' });
-      await queue.add({ to: 'test2@example.com', subject: 'Test', body: 'Body' });
+  describe("Queue management", () => {
+    test("should clear all items", async () => {
+      await queue.add({
+        to: "test1@example.com",
+        subject: "Test",
+        body: "Body",
+      });
+      await queue.add({
+        to: "test2@example.com",
+        subject: "Test",
+        body: "Body",
+      });
 
       expect(queue.size()).toBe(2);
 
@@ -135,9 +190,17 @@ describe('EmailQueue', () => {
       expect(queue.isEmpty()).toBe(true);
     });
 
-    test('should remove specific items by ID', async () => {
-      const id1 = await queue.add({ to: 'test1@example.com', subject: 'Test', body: 'Body' });
-      const id2 = await queue.add({ to: 'test2@example.com', subject: 'Test', body: 'Body' });
+    test("should remove specific items by ID", async () => {
+      const id1 = await queue.add({
+        to: "test1@example.com",
+        subject: "Test",
+        body: "Body",
+      });
+      const id2 = await queue.add({
+        to: "test2@example.com",
+        subject: "Test",
+        body: "Body",
+      });
 
       expect(queue.size()).toBe(2);
 
@@ -146,17 +209,17 @@ describe('EmailQueue', () => {
       expect(queue.size()).toBe(1);
 
       const remaining = await queue.next();
-      expect(remaining.to).toBe('test2@example.com');
+      expect(remaining.to).toBe("test2@example.com");
     });
 
-    test('should return false when removing non-existent ID', () => {
-      const removed = queue.remove('non-existent-id');
+    test("should return false when removing non-existent ID", () => {
+      const removed = queue.remove("non-existent-id");
       expect(removed).toBe(false);
     });
 
-    test('should get all items for inspection', async () => {
-      const email1 = { to: 'test1@example.com', subject: 'Test', body: 'Body' };
-      const email2 = { to: 'test2@example.com', subject: 'Test', body: 'Body' };
+    test("should get all items for inspection", async () => {
+      const email1 = { to: "test1@example.com", subject: "Test", body: "Body" };
+      const email2 = { to: "test2@example.com", subject: "Test", body: "Body" };
 
       await queue.add(email1, 1);
       await queue.add(email2, 2);
@@ -172,8 +235,8 @@ describe('EmailQueue', () => {
     });
   });
 
-  describe('Statistics', () => {
-    test('should provide empty queue statistics', () => {
+  describe("Statistics", () => {
+    test("should provide empty queue statistics", () => {
       const stats = queue.getStats();
 
       expect(stats.size).toBe(0);
@@ -184,15 +247,24 @@ describe('EmailQueue', () => {
       expect(stats.priorityDistribution).toEqual({});
     });
 
-    test('should provide accurate statistics for populated queue', async () => {
-      await new Promise(resolve => setTimeout(resolve, 10)); // Ensure time difference
+    test("should provide accurate statistics for populated queue", async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10)); // Ensure time difference
 
-      await queue.add({ to: 'test1@example.com', subject: 'Test', body: 'Body' }, 1);
-      
-      await new Promise(resolve => setTimeout(resolve, 10));
-      
-      await queue.add({ to: 'test2@example.com', subject: 'Test', body: 'Body' }, 1);
-      await queue.add({ to: 'test3@example.com', subject: 'Test', body: 'Body' }, 2);
+      await queue.add(
+        { to: "test1@example.com", subject: "Test", body: "Body" },
+        1
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      await queue.add(
+        { to: "test2@example.com", subject: "Test", body: "Body" },
+        1
+      );
+      await queue.add(
+        { to: "test3@example.com", subject: "Test", body: "Body" },
+        2
+      );
 
       const stats = queue.getStats();
 
@@ -201,12 +273,12 @@ describe('EmailQueue', () => {
       expect(stats.oldestItem).toBeDefined();
       expect(stats.newestItem).toBeDefined();
       expect(stats.averageAge).toBeGreaterThan(0);
-      expect(stats.priorityDistribution).toEqual({ '1': 2, '2': 1 });
+      expect(stats.priorityDistribution).toEqual({ 1: 2, 2: 1 });
     });
   });
 
-  describe('Batch processing', () => {
-    test('should process items in batches', async () => {
+  describe("Batch processing", () => {
+    test("should process items in batches", async () => {
       const results = [];
       const processor = jest.fn().mockImplementation(async (emailData) => {
         results.push(emailData.to);
@@ -215,7 +287,11 @@ describe('EmailQueue', () => {
 
       // Add test emails
       for (let i = 1; i <= 10; i++) {
-        await queue.add({ to: `test${i}@example.com`, subject: 'Test', body: 'Body' });
+        await queue.add({
+          to: `test${i}@example.com`,
+          subject: "Test",
+          body: "Body",
+        });
       }
 
       const batchResults = await queue.processBatch(processor, 3);
@@ -226,56 +302,78 @@ describe('EmailQueue', () => {
       expect(results).toHaveLength(10);
     });
 
-    test('should handle batch processing errors', async () => {
+    test("should handle batch processing errors", async () => {
       const processor = jest.fn().mockImplementation(async (emailData) => {
-        if (emailData.to.includes('error')) {
-          throw new Error('Processing failed');
+        if (emailData.to.includes("error")) {
+          throw new Error("Processing failed");
         }
         return { success: true };
       });
 
-      await queue.add({ to: 'success@example.com', subject: 'Test', body: 'Body' });
-      await queue.add({ to: 'error@example.com', subject: 'Test', body: 'Body' });
+      await queue.add({
+        to: "success@example.com",
+        subject: "Test",
+        body: "Body",
+      });
+      await queue.add({
+        to: "error@example.com",
+        subject: "Test",
+        body: "Body",
+      });
 
       const results = await queue.processBatch(processor, 5);
 
       expect(results).toHaveLength(2);
       expect(results[0]).toEqual({ success: true });
       expect(results[1].error).toBeDefined();
-      expect(results[1].emailData.to).toBe('error@example.com');
+      expect(results[1].emailData.to).toBe("error@example.com");
     });
 
-    test('should prevent concurrent batch processing', async () => {
+    test("should prevent concurrent batch processing", async () => {
       const processor = jest.fn().mockResolvedValue({ success: true });
 
-      await queue.add({ to: 'test@example.com', subject: 'Test', body: 'Body' });
+      await queue.add({
+        to: "test@example.com",
+        subject: "Test",
+        body: "Body",
+      });
 
       // Start first batch processing
       const promise1 = queue.processBatch(processor, 1);
 
       // Try to start second batch processing
-      await expect(queue.processBatch(processor, 1)).rejects.toThrow('already being processed');
+      await expect(queue.processBatch(processor, 1)).rejects.toThrow(
+        "already being processed"
+      );
 
       // Wait for first to complete
       await promise1;
 
       // Should be able to process again
-      await queue.add({ to: 'test2@example.com', subject: 'Test', body: 'Body' });
+      await queue.add({
+        to: "test2@example.com",
+        subject: "Test",
+        body: "Body",
+      });
       await expect(queue.processBatch(processor, 1)).resolves.toBeDefined();
     });
 
-    test('should indicate processing status', async () => {
+    test("should indicate processing status", async () => {
       expect(queue.isProcessing()).toBe(false);
 
       const processor = jest.fn().mockImplementation(async () => {
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
         return { success: true };
       });
 
-      await queue.add({ to: 'test@example.com', subject: 'Test', body: 'Body' });
+      await queue.add({
+        to: "test@example.com",
+        subject: "Test",
+        body: "Body",
+      });
 
       const processingPromise = queue.processBatch(processor, 1);
-      
+
       expect(queue.isProcessing()).toBe(true);
 
       await processingPromise;
@@ -284,11 +382,15 @@ describe('EmailQueue', () => {
     });
   });
 
-  describe('ID generation', () => {
-    test('should generate unique IDs', async () => {
+  describe("ID generation", () => {
+    test("should generate unique IDs", async () => {
       const ids = [];
       for (let i = 0; i < 100; i++) {
-        const id = await queue.add({ to: 'test@example.com', subject: 'Test', body: 'Body' });
+        const id = await queue.add({
+          to: "test@example.com",
+          subject: "Test",
+          body: "Body",
+        });
         ids.push(id);
       }
 
