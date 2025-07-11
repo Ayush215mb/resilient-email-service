@@ -139,6 +139,7 @@ export default class EmailService {
 
   async sendWithRetryAndFallback(emailData, emailId) {
     let lastError;
+    let providersAttempted = 0;
 
     for (
       let providerIndex = 0;
@@ -152,9 +153,19 @@ export default class EmailService {
 
       if (circuitBreaker.isOpen()) {
         Logger.warn(`Skipping ${provider.name} - circuit breaker is open`);
+
+        const currentStatus = this.emailStatuses.get(emailId);
+        currentStatus.attempts.push({
+          provider: provider.name,
+          attempt: 0,
+          timestamp: new Date().toISOString(),
+          status: "skipped",
+          error: "Circuit breaker is open",
+        });
         continue;
       }
 
+      providersAttempted++;
       Logger.info(`Attempting to send email ${emailId} with ${provider.name}`);
 
       for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
@@ -210,6 +221,10 @@ export default class EmailService {
       Logger.warn(
         `All attempts failed for ${provider.name}, trying next provider...`
       );
+    }
+
+    if (providersAttempted === 0) {
+      throw new Error("All providers are unavailable (circuit breakers open)");
     }
 
     throw new Error(
